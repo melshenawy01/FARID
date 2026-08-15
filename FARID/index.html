@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRAID</title>
+    <!-- Google Fonts for Luxury Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Paddle V2 SDK -->
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+    <script>
+        Paddle.Initialize({ 
+            token: "live_77957177d43b179ffb2ff574fd2" 
+        });
+    </script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #050505;
+            background-image: radial-gradient(circle at center, #111111 0%, #050505 100%);
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 1. Bold Logo & Brand Name */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 35px;
+        }
+
+        .logo-svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .brand-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 30px;
+            font-weight: 800; /* Extra Bold */
+            letter-spacing: 7px;
+            color: #ffffff;
+        }
+
+        /* 2. Timer Card */
+        .timer-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 22px 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .timer-title {
+            font-size: 10px;
+            letter-spacing: 2.5px;
+            color: #777777;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .timer-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-number {
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+            min-width: 45px;
+        }
+
+        .timer-label {
+            font-size: 8px;
+            letter-spacing: 1.5px;
+            color: #555555;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .timer-colon {
+            font-size: 18px;
+            color: #444444;
+            margin-bottom: 12px;
+        }
+
+        /* 3. Piece Display Box */
+        .piece-box {
+            width: 100%;
+            height: 170px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .piece-shape-preview {
+            width: 65px;
+            height: 65px;
+            border: 1px dashed rgba(255, 255, 255, 0.25);
+            filter: blur(5px);
+            transform: rotate(45deg);
+            margin-bottom: 12px;
+            opacity: 0.35;
+        }
+
+        .piece-text {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: #e0e0e0;
+            text-transform: uppercase;
+            z-index: 2;
+        }
+
+        /* 4. Action Button */
+        .get-button {
+            width: 100%;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            border-radius: 8px;
+            padding: 18px 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+            margin-bottom: 14px;
+        }
+
+        .get-button:hover {
+            background: #e5e5e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 255, 255, 0.22);
+        }
+
+        .get-button:active {
+            transform: translateY(0);
+        }
+
+        /* 5. Minimal Subtitle Note */
+        .sub-note {
+            font-size: 9px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: #666666;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 25px;
+        }
+
+        /* 6. Minimalist Luxury Footer */
+        .legal-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+
+        .legal-footer:hover {
+            opacity: 0.85;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 8px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .footer-links a {
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        .footer-links span {
+            color: #444444;
+            font-size: 6px;
+        }
+
+        .contact-email {
+            font-size: 8px;
+            letter-spacing: 1.5px;
+            color: #555555;
+            text-transform: uppercase;
+        }
+
+        /* Modal Overlay Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 5, 0.92);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: rgba(18, 18, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+            text-align: left;
+            color: #cccccc;
+            font-size: 11px;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content h2 {
+            font-family: 'Cinzel', serif;
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 8px 18px;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+        }
+
+        .close-btn:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Bolder Stroke (12px) -->
+                <path d="M 10,90 L 10,10 L 90,10 L 90,90 L 60,90 M 40,90 L 10,90" 
+                      stroke="white" stroke-width="12" stroke-linecap="square"/>
+            </svg>
+            <div class="brand-name">FRAID</div>
+        </div>
+
+        <!-- Timer Section -->
+        <div class="timer-card">
+            <div class="timer-title">Time Remaining</div>
+            <div class="timer-display">
+                <div class="timer-unit">
+                    <span class="timer-number" id="days">00</span>
+                    <span class="timer-label">Days</span>
+                </div>
+                <span class="timer-colon">:</span>
+                <div class="timer-unit">
+                    <span class="timer-number" id="hours">00</span>
+                    <span class="timer-label">Hours</span>
+                </div>
+                <span class="timer-colon">:</span>
+                <div class="timer-unit">
+                    <span class="timer-number" id="minutes">00</span>
+                    <span class="timer-label">Minutes</span>
+                </div>
+                <span class="timer-colon">:</span>
+                <div class="timer-unit">
+                    <span class="timer-number" id="seconds">00</span>
+                    <span class="timer-label">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Piece Box Section -->
+        <div class="piece-box">
+            <div class="piece-shape-preview"></div>
+            <div class="piece-text">PIECE NO. 08</div>
+        </div>
+
+        <!-- CTA Button -->
+        <button class="get-button" onclick="openCheckout()">OWN A FRACTION OF THE LEGEND &mdash; $30</button>
+
+        <!-- Verification Subtitle -->
+        <div class="sub-note">Authentic Digital Ownership &bull; Verified Pass</div>
+
+        <!-- Minimalist Luxury Footer -->
+        <footer class="legal-footer">
+            <div class="footer-links">
+                <a href="#terms" onclick="openModal('terms-modal'); return false;">Terms of Service</a>
+                <span>&bull;</span>
+                <a href="#privacy" onclick="openModal('privacy-modal'); return false;">Privacy Policy</a>
+                <span>&bull;</span>
+                <a href="#refund" onclick="openModal('refund-modal'); return false;">Refund Policy</a>
+            </div>
+            <div class="contact-email">Concierge: support@fraid.world</div>
+        </footer>
+    </div>
+
+    <!-- Modals for Legal Compliance -->
+    <div id="terms-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>TERMS OF SERVICE</h2>
+            <p>Welcome to FRAID. By accessing fraid.world and purchasing our digital collectibles, you agree to be bound by these terms. All digital pieces released are unique collectible assets subject to availability during their designated monthly release window.</p>
+            <button class="close-btn" onclick="closeModal('terms-modal')">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="privacy-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>PRIVACY POLICY</h2>
+            <p>FRAID respects your privacy. We collect minimal payment details processed securely through our Merchant of Record, Paddle. We do not store financial credentials or sell user personal data to third parties.</p>
+            <button class="close-btn" onclick="closeModal('privacy-modal')">CLOSE</button>
+        </div>
+    </div>
+
+    <div id="refund-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>REFUND POLICY</h2>
+            <p>Due to the exclusive and time-sensitive nature of FRAID digital collectibles, all purchases are final and non-refundable once digital ownership has been transferred, unless required by applicable consumer protection laws.</p>
+            <button class="close-btn" onclick="closeModal('refund-modal')">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- JavaScript for Dynamic Monthly Countdown, Checkout, & Modals -->
+    <script>
+        function openCheckout() {
+            Paddle.Checkout.open({
+                items: [
+                    {
+                        priceId: "pri_01kzxh4thgnhdav7bs5wy6ksv4",
+                        quantity: 1
+                    }
+                ]
+            });
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+            const diff = endOfMonth - now;
+
+            if (diff <= 0) return;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('days').innerText = String(days).padStart(2, '0');
+            document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>
