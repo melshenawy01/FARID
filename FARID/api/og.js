@@ -1,8 +1,8 @@
-import { ImageResponse } from '@vercel/og';
+import { ImageResponse } from 'https://cdn.jsdelivr.net/npm/@vercel/og@0.6.2/+esm';
 
 export const config = { runtime: 'edge' };
 
-export default async function handler(req) {
+export default function handler(req) {
   const { searchParams } = new URL(req.url);
   const piecesParam = searchParams.get('pieces');
   const pieces = piecesParam ? piecesParam.split(',').filter(Boolean) : [];
