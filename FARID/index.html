@@ -148,152 +148,60 @@ SHARE MY CANVAS
 <div id="refund-modal" class="modal-overlay"><div class="modal-content"><h2>REFUND POLICY</h2><p>Due to the exclusive nature of FARID digital collectibles, all purchases are final and non-refundable once transferred.</p><button class="close-btn" onclick="closeModal('refund-modal')">CLOSE</button></div></div>
 
 <script>
-const SUPABASE_URL = 'https://lpoanxqlsuhxqapibvqc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxwb2FueHFsc3VoeHFhcGlidnFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NjE4MzgsImV4cCI6MjEwMjUzNzgzOH0.dlbIqKMP12x_TSc_8RMWIAuJHRkC0BeIDsuYv3G8QY4';
-const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
-let currentSession = null, userOwnedPiecesCount = 0;
+const SUPABASE_URL = 'https://jdsdjuqhtncyeizkpczu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInRefiI6Impkc2RqdXFodG5jeWVpemtwY3p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NTMxMjMsImV4cCI6MjEwNTAyOTEyM30.00Hz29wvK9GNGl55qyba4PhkGTuly13RMDMrQN6Lt3k';
 
-async function cleanUrlDomain() {
-  if (window.location.hash.includes('access_token')) {
-    const params = new URLSearchParams(window.location.hash.substring(1));
-    const access_token = params.get('access_token'), refresh_token = params.get('refresh_token');
-    history.replaceState(null, "", window.location.pathname);
-    if (access_token) await _supabase.auth.setSession({ access_token, refresh_token });
-  } else if (window.location.hash || window.location.search) history.replaceState(null, "", window.location.pathname);
-}
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'farid_auth_token', flowType: 'pkce' } });
 
-function resetGoogleButton() {
-  const btn = document.getElementById('btn-google-login'), txt = document.getElementById('google-btn-text'), icon = document.getElementById('google-svg-icon');
-  if (btn && txt && icon) { btn.classList.remove('loading'); icon.style.display = 'block'; txt.innerText = 'Continue with Google'; }
-}
+let currentSession = null, userOwnedPiecesCount = 0, ownedPieces = [], isUserSecondary = false, cinemaTimer = null, currentSlide = 0;
+const TOTAL_PIECES = 12, cinemaDescs = ["1. EVERY MONTH A MYSTERIOUS FRACTION IS DROPPED", "2. ACQUIRE TO UNLOCK AND ILLUMINATE YOUR PIECE", "3. PIECES AUTOMATICALLY ASSEMBLE IN YOUR CANVAS", "4. COLLECT ALL 12 FRACTIONS TO REVEAL THE FULL MASTERPIECE"];
+const gridMatrix = [[5, 1, 4], [10, 12, 8], [7, 9, 6], [3, 2, 11]];
+
+const now = new Date(), CURRENT_MONTH_PIECE = Math.min(Math.max(1, ((now.getFullYear() - 2026) * 12) + (now.getMonth() + 1)), 12), CURRENT_PIECE_STR = String(CURRENT_MONTH_PIECE).padStart(2, '0');
+
+_supabase.auth.onAuthStateChange((_, s) => { currentSession = s; if (s) updateUIWithSession(s); });
+
+async function checkUserSecondaryStatus(){ if(!currentSession?.user) return; try{ const {data: u} = await _supabase.from('users').select('is_secondary').eq('id', currentSession.user.id).maybeSingle(); isUserSecondary = u?.is_secondary || false; }catch(e){console.error(e);} }
+function generateCompositeCanvasWithSignature(){ const c = document.getElementById('composite-canvas-preview'); if(!c) return; const x = c.getContext('2d'); x.fillStyle = '#050505'; x.fillRect(0, 0, c.width, c.height); const i = new Image(); i.crossOrigin = "anonymous"; i.src = "images/canvas.png"; i.onload = () => { x.drawImage(i, 0, 0, c.width, c.height); applyRoyalSignature(x, c.width, c.height); }; i.onerror = () => { const r = 4, l = 3, w = c.width/l, h = c.height/r; let n = 0; for(let e=0; e<r; e++) for(let o=0; o<l; o++) { const p = gridMatrix[e][o], m = new Image(); m.crossOrigin = "anonymous"; m.src = `images/piece-${p}.png`; const k = () => { n++; if(n === 12) applyRoyalSignature(x, c.width, c.height); }; m.onload = () => { x.drawImage(m, o*w, e*h, w, h); k(); }; m.onerror = () => { x.fillStyle = '#111'; x.fillRect(o*w, e*h, w, h); k(); }; } }; }
+function applyRoyalSignature(x, w, h){ x.save(); const sX = w-60, sY = h-55, r = 22, g = x.createRadialGradient(w-120, h-60, 10, w-120, h-60, 100); g.addColorStop(0, 'rgba(212, 175, 55, 0.2)'); g.addColorStop(1, 'rgba(0, 0, 0, 0)'); x.fillStyle = g; x.fillRect(w-250, h-120, 230, 110); x.beginPath(); x.arc(sX, sY, r, 0, Math.PI*2); x.strokeStyle = '#d4af37'; x.lineWidth = 1.5; x.stroke(); x.fillStyle = '#d4af37'; x.font = 'bold 14px Cinzel, serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('F', sX, sY+1); x.textAlign = 'right'; x.fillStyle = '#ffffff'; x.font = '700 13px Montserrat, sans-serif'; x.fillText('FARID MASTERPIECE', sX-35, h-62); x.fillStyle = '#d4af37'; x.font = '500 9px Cinzel, serif'; x.fillText('OFFICIAL CANVAS SEAL • 2026', sX-35, h-46); x.restore(); }
+function openCinemaGuide(){ openModal('video-modal'); currentSlide = 0; showSlide(0); clearInterval(cinemaTimer); cinemaTimer = setInterval(() => { currentSlide = (currentSlide + 1) % 4; showSlide(currentSlide); }, 3200); }
+function showSlide(i){ document.querySelectorAll('.cinema-slide').forEach((s, x) => s.classList.toggle('active', x === i)); document.querySelectorAll('.progress-dot').forEach((d, x) => d.classList.toggle('active', x === i)); const descEl = document.getElementById('cinema-desc'); if(descEl) descEl.innerText = cinemaDescs[i]; }
+function closeCinemaGuide(){ clearInterval(cinemaTimer); closeModal('video-modal'); }
+function resetGoogleButton(){ const b = document.getElementById('btn-google-login'), t = document.getElementById('google-btn-text'), i = document.getElementById('google-svg-icon'); if(b && t && i){ b.classList.remove('loading'); i.style.display = 'block'; t.innerText = 'Continue with Google'; } }
+async function fetchUserCountry(){ const c = localStorage.getItem('user_country'); if(c) return c; const controller = new AbortController(), timeoutId = setTimeout(() => controller.abort(), 3000); try { const r = await fetch('https://ipwho.is/', { signal: controller.signal }), d = await r.json(); clearTimeout(timeoutId); if(d?.country){ localStorage.setItem('user_country', d.country); return d.country; } } catch(e){} return 'Unknown'; }
+async function syncUserDataDirect(s){ if(!s?.user) return null; try { const c = await fetchUserCountry(), r = await fetch('/api/user/update-profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: s.user.id, email: s.user.email, country: c }) }), d = await r.json(); if(d.success && d.user) return d.user.name; } catch(e){} try { const { data: u } = await _supabase.from('users').select('name').eq('id', s.user.id).maybeSingle(); return u?.name || null; } catch(e){ return null; } }
+async function loadUserCanvas(uId){ try { const { data: u } = await _supabase.from('users').select('owned_pieces').eq('id', uId).maybeSingle(); let dbPieces = u?.owned_pieces || [], claimedFree = localStorage.getItem('claimed_free_piece_' + uId); ownedPieces = dbPieces.filter(p => parseInt(p, 10) !== 1 || claimedFree === 'true'); userOwnedPiecesCount = ownedPieces.length; renderCanvasGrid(); updateBuyButtonState(); } catch (e) { renderCanvasGrid(); } }
+function renderCanvasGrid(){ const g = document.getElementById('artwork-grid'); if(!g) return; g.innerHTML = ''; gridMatrix.forEach(r => r.forEach(p => { const a = ownedPieces.includes(p) || ownedPieces.includes(String(p)), s = document.createElement('div'); s.className = `artwork-piece ${a ? 'owned' : ''}`; s.dataset.piece = p; if(a){ s.style.backgroundImage = `url('images/piece-${p}.png')`; s.innerHTML = ''; s.onclick = () => openPieceLightbox(p); } else { s.innerHTML = '<div class="piece-qmark">?</div>'; s.style.cursor = 'default'; s.onclick = null; } g.appendChild(s); })); }
+function openPieceLightbox(p){ const i = document.getElementById('lightbox-img'), t = document.getElementById('lightbox-title'); if(i) i.src = `images/piece-${p}.png`; if(t) t.innerText = `PIECE NO. ${String(p).padStart(2,'0')}`; openModal('image-lightbox-modal'); }
+function redirectToOfficialGumroad(pieceId){ if (!currentSession?.user) { openModal('account-modal'); return; } const userEmail = encodeURIComponent(currentSession.user.email), overlayUrl = `https://faridworld.gumroad.com/l/ormhzn?wanted=true&email=${userEmail}&variant=Piece%20${pieceId}`, gumroadLink = document.createElement('a'); gumroadLink.className = 'gumroad-button'; gumroadLink.href = overlayUrl; gumroadLink.setAttribute('data-gumroad-single-product', 'true'); gumroadLink.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;'; document.body.appendChild(gumroadLink); gumroadLink.click(); setTimeout(() => gumroadLink.remove(), 1000); }
+async function updateUIWithSession(s){ const t = document.querySelector('#account-modal h2'); if(s?.user){ document.getElementById('auth-state-unregistered').style.display = 'none'; document.getElementById('auth-state-registered').style.display = 'flex'; if(t) t.innerText = 'COLLECTOR PROFILE'; const n = await syncUserDataDirect(s); if(n) document.getElementById('user-custom-name').innerText = n; await loadUserCanvas(s.user.id); checkPurchaseReturn(); } else { document.getElementById('auth-state-unregistered').style.display = 'block'; document.getElementById('auth-state-registered').style.display = 'none'; if(t) t.innerText = 'MEMBER ACCESS'; resetGoogleButton(); renderCanvasGrid(); const urlParams = new URLSearchParams(window.location.search); if(urlParams.get('purchase') === 'success') openModal('account-modal'); } document.getElementById('account-btn').innerText = 'ACCOUNT'; }
+async function handleGoogleSignIn(){ const b = document.getElementById('btn-google-login'); if(b){ b.classList.add('loading'); document.getElementById('google-svg-icon').style.display = 'none'; document.getElementById('google-btn-text').innerText = 'CONNECTING...'; } const u = new URLSearchParams(window.location.search), p = u.get('piece') || sessionStorage.getItem('pending_p'); if(p){ sessionStorage.setItem('pending_buy', '1'); sessionStorage.setItem('pending_p', p); } await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin, queryParams: { prompt: 'select_account' } } }); }
+async function handleSignOut(){ await _supabase.auth.signOut(); closeModal('account-modal'); window.location.reload(); }
+async function initiatePaymobCheckout(method = 'card'){ if(!currentSession || !currentSession.user){ openModal('account-modal'); return; } const pNum = CURRENT_MONTH_PIECE, cEl = document.getElementById('checkout-piece-num'); if(cEl) cEl.textContent = 'PIECE #' + pNum; try { const res = await fetch('/api/create-paymob-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentSession.user.email, pieceId: pNum, amount: 500, paymentMethod: method }) }), data = await res.json(); if(data.success && data.iframeUrl){ document.getElementById('paymob-iframe').src = data.iframeUrl; openModal('paymob-modal'); } else { alert('CHECKOUT ERROR: ' + (data.error || 'Unable to initiate transaction')); } } catch(err){ console.error(err); alert('حدث خطأ أثناء إعداد عملية الدفع'); } }
+function handleBuyClick(e){ if(e) e.preventDefault(); if(!currentSession || !currentSession.user){ openModal('account-modal'); return; } initiatePaymobCheckout('card'); }
+function triggerPurchaseFlow(pieceId = CURRENT_MONTH_PIECE){ const pieceStr = String(pieceId).padStart(2, '0'); if(!ownedPieces.includes(pieceId) && !ownedPieces.includes(String(pieceId))) ownedPieces.push(pieceId); userOwnedPiecesCount = ownedPieces.length; renderCanvasGrid(); updateBuyButtonState(); if(userOwnedPiecesCount >= 12){ generateCompositeCanvas(); const b = document.getElementById('buy-action-btn'); if(b){ b.className = 'get-button acquired-btn'; b.innerHTML = '<span>✦ MASTERPIECE CANVAS COMPLETED</span>'; } const fullOverlay = document.getElementById('full-reveal-overlay'); if(fullOverlay){ fullOverlay.style.display = 'flex'; setTimeout(() => fullOverlay.classList.add('active'), 50); } } else { const revealImg = document.getElementById('reveal-img'), revealTitle = document.querySelector('#reveal-overlay .reveal-title'); if(revealImg) revealImg.src = `images/piece-${pieceId}.png`; if(revealTitle) revealTitle.innerText = `PIECE NO. ${pieceStr} SECURED`; const o = document.getElementById('reveal-overlay'); if(o){ o.style.display = 'flex'; setTimeout(() => o.classList.add('active'), 50); } } }
+function closeRevealAndOpenCanvas(){ const o = document.getElementById('reveal-overlay'); o.classList.remove('active'); setTimeout(() => { o.style.display = 'none'; openModal('account-modal'); }, 800); }
+function closeFullReveal(){ const o = document.getElementById('full-reveal-overlay'); o.classList.remove('active'); setTimeout(() => o.style.display = 'none', 800); }
+function generateCompositeCanvas(){ generateCompositeCanvasWithSignature(); }
+function downloadFullArtwork(){ const a = document.createElement('a'); a.href = 'images/canvas.png'; a.download = 'FARID-ANNUAL-MASTERPIECE-2026.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+async function shareCollectorProfile(){ const e = document.getElementById("user-custom-name")?.innerText || "08", t = document.createElement("canvas"), o = t.getContext("2d"), n = 800, r = 220, a = 30, s = 12, c = 3, i = 4, l = (n - 2 * a - 2 * s) / c, d = l * (9 / 16), u = i * d + 3 * s + 2 * a; t.width = n; t.height = r + u; o.fillStyle = "#050505"; o.fillRect(0, 0, t.width, t.height); o.save(); o.strokeStyle = "#ffffff"; o.lineWidth = 6; o.lineCap = "square"; o.beginPath(); const h = n / 2 - 20, m = 30; o.moveTo(h, m + 40); o.lineTo(h, m); o.lineTo(h + 40, m); o.lineTo(h + 40, m + 40); o.lineTo(h + 25, m + 40); o.moveTo(h + 15, m + 40); o.lineTo(h, m + 40); o.stroke(); o.restore(); o.textAlign = "center"; o.fillStyle = "#ffffff"; o.font = "800 24px Montserrat, sans-serif"; o.fillText("FARID", n / 2, 100); o.fillStyle = "#666666"; o.font = "600 11px Montserrat, sans-serif"; o.fillText("WWW.FARID.WORLD", n / 2, 120); o.fillStyle = "#d4af37"; o.font = "700 14px Cinzel, serif"; o.fillText(`ID: ${e}`, n / 2, 155); o.fillStyle = "#888888"; o.font = "600 10px Montserrat, sans-serif"; o.fillText("THE TRUTH OF THE UNIVERSE", n / 2, 180); const f = r + a; for (let e = 0; e < i; e++) { for (let t = 0; t < c; t++) { const r = gridMatrix[e][t], i = a + t * (l + s), u = f + e * (d + s), m = ownedPieces.includes(r) || ownedPieces.includes(String(r)); if (m) { const e = await new Promise((resolve) => { const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => resolve(img); img.onerror = () => { const imgFallback = new Image(); imgFallback.crossOrigin = "anonymous"; imgFallback.onload = () => resolve(imgFallback); imgFallback.onerror = () => resolve(null); imgFallback.src = `${SUPABASE_URL}/storage/v1/object/public/artworks/piece_${String(r).padStart(2, "0")}.png`; }; img.src = `images/piece-${r}.png`; }); e ? o.drawImage(e, i, u, l, d) : (o.fillStyle = "#1a1a1a", o.fillRect(i, u, l, d)); o.strokeStyle = "rgba(212, 175, 55, 0.8)"; o.lineWidth = 2; o.strokeRect(i, u, l, d); } else { o.fillStyle = "rgba(255, 255, 255, 0.03)"; o.fillRect(i, u, l, d); o.strokeStyle = "rgba(255, 255, 255, 0.1)"; o.lineWidth = 1; o.strokeRect(i, u, l, d); o.fillStyle = "rgba(255, 255, 255, 0.3)"; o.font = "20px Cinzel, serif"; o.fillText("?", i + l / 2, u + d / 2 + 7); } } } t.toBlob((async o => { if (!o) return; const r = new File([o], `FARID-Collector-${e}.png`, { type: "image/png" }), a = { files: [r], title: "FARID Canvas", text: `I " Collector ${e} " hold ${userOwnedPiecesCount}/12 pieces on FARID Canvas. Explore the collection on https://www.farid.world` }; if (navigator.canShare && navigator.canShare({ files: [r] })) { try { await navigator.share(a); } catch (e) {} } else { const o = document.createElement("a"); o.download = `FARID-Collector-${e}.png`; o.href = t.toDataURL("image/png"); o.click(); showToast("CANVAS IMAGE READY"); } }), "image/png"); }
+function showToast(m){ const t = document.getElementById('toast-notification'); if(!t) return; t.innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); }
+function updateTimer(){ const n = new Date(), e = new Date(n.getFullYear(), n.getMonth() + 1, 0, 23, 59, 59), d = e - n; if(d <= 0) return; const daysEl = document.getElementById('days'), hoursEl = document.getElementById('hours'), minutesEl = document.getElementById('minutes'), secondsEl = document.getElementById('seconds'); if(daysEl) daysEl.innerText = String(Math.floor(d / 86400000)).padStart(2, '0'); if(hoursEl) hoursEl.innerText = String(Math.floor((d / 3600000) % 24)).padStart(2, '0'); if(minutesEl) minutesEl.innerText = String(Math.floor((d / 60000) % 60)).padStart(2, '0'); if(secondsEl) secondsEl.innerText = String(Math.floor((d / 1000) % 60)).padStart(2, '0'); }
+function openModal(i){ const el = document.getElementById(i); if(el) el.style.display = 'flex'; }
+function closeModal(i){ const el = document.getElementById(i); if(el) el.style.display = 'none'; }
+function handleAffiliateStart(){ if(!currentSession || !currentSession.user){ closeModal('affiliate-modal'); openModal('account-modal'); return; } window.open('https://faridworld.gumroad.com/affiliates', '_blank'); closeModal('affiliate-modal'); }
+async function checkPurchaseReturn(){ const u = new URLSearchParams(window.location.search), isSuccess = u.get('purchase') === 'success', pParam = u.get('piece'); if(isSuccess && pParam){ sessionStorage.setItem('pending_buy', '1'); sessionStorage.setItem('pending_p', pParam); window.history.replaceState({}, document.title, window.location.pathname); } const hasPending = sessionStorage.getItem('pending_buy') === '1', pendingP = sessionStorage.getItem('pending_p'); if(!hasPending || !pendingP) return; if(!currentSession?.user){ openModal('account-modal'); return; } const targetPiece = parseInt(pendingP, 10); let verified = false, attempts = 0; while(attempts < 8 && !verified){ try { const r = await fetch('/api/user/verify-purchase', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentSession.user.email }) }), d = await r.json(); if(d.success && d.verified){ ownedPieces = d.owned_pieces || []; userOwnedPiecesCount = ownedPieces.length; if(ownedPieces.includes(targetPiece)){ renderCanvasGrid(); triggerPurchaseFlow(targetPiece); verified = true; } sessionStorage.removeItem('pending_buy'); sessionStorage.removeItem('pending_p'); break; } } catch(e){ console.error('Verify error:', e); } attempts++; if(!verified && attempts < 8) await new Promise(res => setTimeout(res, 1200)); } if(!verified){ sessionStorage.removeItem('pending_buy'); sessionStorage.removeItem('pending_p'); } }
+async function openTransferModal(){ const m = document.getElementById('account-modal'), t = document.getElementById('transfer-modal'); if(!currentSession?.user){ if(m) m.style.display = 'flex'; return; } const gridElem = document.getElementById('transfer-grid-container'), hiddenInput = document.getElementById('selected-transfer-piece'); if(hiddenInput) hiddenInput.value = ''; let purchasedPieces = []; try { const { data: u } = await _supabase.from('users').select('is_secondary, owned_pieces, purchased_pieces').eq('id', currentSession.user.id).maybeSingle(); isUserSecondary = u?.is_secondary || false; let pPieces = u?.purchased_pieces || []; if(typeof pPieces === 'string') try { pPieces = JSON.parse(pPieces); } catch(e){} purchasedPieces = pPieces.map(p => parseInt(p, 10)); } catch(e){ console.error(e); } let selectedPieces = [], allOwned = ownedPieces.map(p => parseInt(p, 10)); if(gridElem){ gridElem.innerHTML = ''; for(let i = 1; i <= 12; i++){ const cell = document.createElement('div'), isOwned = allOwned.includes(i), isSellable = isUserSecondary ? (isOwned && purchasedPieces.includes(i)) : (isOwned && i !== 1), isBlocked = !isSellable; cell.className = `transfer-cell ${isBlocked ? 'disabled' : 'available'}`; cell.innerText = String(i).padStart(2, '0'); if(!isBlocked){ cell.onclick = () => { if(cell.classList.contains('selected')){ cell.classList.remove('selected'); selectedPieces = selectedPieces.filter(p => p !== i); } else { cell.classList.add('selected'); selectedPieces.push(i); } if(hiddenInput) hiddenInput.value = selectedPieces.join(','); }; } else { cell.title = !isOwned ? "Unowned Piece" : "Only self-purchased pieces can be assigned"; } gridElem.appendChild(cell); } } if(t) t.style.display = 'flex'; }
+function updateBuyButtonState(){ const isCurrentOwned = ownedPieces.includes(CURRENT_MONTH_PIECE) || ownedPieces.includes(String(CURRENT_MONTH_PIECE)), b = document.getElementById('buy-action-btn'), box = document.getElementById('main-piece-box'), img = document.getElementById('main-piece-img'); if(isCurrentOwned){ if(box) box.classList.add('acquired'); if(img) img.src = `images/piece-${CURRENT_MONTH_PIECE}.png`; if(b){ b.className = 'get-button acquired-btn'; b.innerHTML = `<span>✦ PIECE NO. ${CURRENT_PIECE_STR} SECURED</span>`; } } }
+function getCurrentUserId(){ return currentSession?.user?.id?.slice(0, 8).toUpperCase() || document.getElementById('user-custom-name')?.innerText || 'GUEST'; }
+async function executePieceTransfer(){ const pieceIdsVal = document.getElementById('selected-transfer-piece')?.value, recipientEmail = document.getElementById('transfer-recipient-email')?.value.trim(), btn = document.getElementById('btn-submit-transfer'); if(!pieceIdsVal) return showToast('PLEASE SELECT AT LEAST ONE PIECE'); if(!recipientEmail?.includes('@')) return showToast('INVALID RECIPIENT EMAIL'); const pieceIds = pieceIdsVal.split(',').map(p => parseInt(p, 10)).filter(p => !isNaN(p)); if(btn){ btn.disabled = true; btn.innerText = 'PROCESSING...'; } try { const res = await fetch('/api/user/transfer-piece', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sellerEmail: currentSession.user.email, recipientEmail, pieceIds: pieceIds, pieceId: pieceIds[0] }) }), data = await res.json(); if(data.success){ showToast('FRACTIONS ASSIGNED SUCCESSFULLY'); closeModal('transfer-modal'); const emailInput = document.getElementById('transfer-recipient-email'); if(emailInput) emailInput.value = ''; } else { showToast(data.error ? data.error.toUpperCase() : 'TRANSFER FAILED'); } } catch(err){ showToast('ASSIGNMENT ERROR'); } finally { if(btn){ btn.disabled = false; btn.innerText = 'CONFIRM ASSIGNMENT'; } } }
+
 window.addEventListener('pageshow', resetGoogleButton);
-
-async function fetchUserCountry() {
-  const cached = localStorage.getItem('user_country');
-  if (cached) return cached;
-  try {
-    const res = await fetch('https://ipwho.is/'), data = await res.json();
-    if (data?.country) { localStorage.setItem('user_country', data.country); return data.country; }
-  } catch (e) {}
-  return 'Unknown';
-}
-
-async function syncUserDataDirect(session) {
-  if (!session?.user) return null;
-  try {
-    const { data: user } = await _supabase.from('users').select('name, country').eq('id', session.user.id).maybeSingle();
-    if (user) {
-      if (!user.country || user.country === 'Unknown') {
-        const country = await fetchUserCountry();
-        if (country !== 'Unknown') await _supabase.from('users').update({ country }).eq('id', session.user.id);
-      }
-      return user.name ? user.name.replace(/^NO\.\s*/i, '') : null;
-    }
-  } catch (err) {}
-  return null;
-}
-
-async function loadUserCanvas(userId) {
-  try {
-    const { data: user } = await _supabase.from('users').select('owned_pieces').eq('id', userId).maybeSingle();
-    const ownedPieces = user?.owned_pieces || [];
-    userOwnedPiecesCount = ownedPieces.length;
-    
-    document.querySelectorAll('.artwork-piece').forEach(el => {
-      const pNum = parseInt(el.getAttribute('data-piece'), 10);
-      if (ownedPieces.includes(pNum) || ownedPieces.includes(String(pNum))) {
-        el.classList.add('owned'); el.innerText = '';
-        el.style.backgroundImage = `url('${SUPABASE_URL}/storage/v1/object/public/artworks/piece_${String(pNum).padStart(2, '0')}.jpg')`;
-      } else {
-        el.classList.remove('owned'); el.innerText = String(pNum).padStart(2, '0'); el.style.backgroundImage = 'none';
-      }
-    });
-  } catch (err) {}
-}
-
-async function initAuth() {
-  const { data: { session } } = await _supabase.auth.getSession();
-  currentSession = session;
-  await updateUIWithSession(session);
-  cleanUrlDomain();
-}
-
-_supabase.auth.onAuthStateChange((_, session) => {
-  currentSession = session;
-  updateUIWithSession(session).catch(console.error);
-  cleanUrlDomain();
-});
-
-cleanUrlDomain();
-document.addEventListener('DOMContentLoaded', initAuth);
-
-async function updateUIWithSession(session) {
-  const modalTitle = document.querySelector('#account-modal h2');
-  if (session?.user) {
-    document.getElementById('auth-state-unregistered').style.display = 'none';
-    document.getElementById('auth-state-registered').style.display = 'flex';
-    if (modalTitle) modalTitle.innerText = 'COLLECTOR PROFILE';
-    const cName = await syncUserDataDirect(session);
-    if (cName) document.getElementById('user-custom-name').innerText = cName;
-    await loadUserCanvas(session.user.id);
-  } else {
-    document.getElementById('auth-state-unregistered').style.display = 'block';
-    document.getElementById('auth-state-registered').style.display = 'none';
-    if (modalTitle) modalTitle.innerText = 'MEMBER ACCESS';
-    resetGoogleButton();
-  }
-  document.getElementById('account-btn').innerText = 'ACCOUNT';
-}
-
-async function handleGoogleSignIn() {
-  const btn = document.getElementById('btn-google-login');
-  btn.classList.add('loading');
-  document.getElementById('google-svg-icon').style.display = 'none';
-  document.getElementById('google-btn-text').innerText = 'CONNECTING...';
-  const { error } = await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname, queryParams: { prompt: 'select_account' } } });
-  if (error) resetGoogleButton();
-}
-
-async function handleSignOut() {
-  localStorage.removeItem('user_country');
-  await _supabase.auth.signOut();
-  closeModal('account-modal');
-  cleanUrlDomain();
-}
-
-function openCheckout() {
-  if (!currentSession?.user) { openModal('account-modal'); return; }
-  Paddle.Checkout.open({ items: [{ priceId: "pri_01kzxh4thgnhdav7bs5wy6ksv4", quantity: 1 }], settings: { successUrl: 'https://www.farid.world/' } });
-}
-
-function shareCollectorProfile() {
-  const name = document.getElementById('user-custom-name').innerText || '';
-  const owned = Array.from(document.querySelectorAll('.artwork-piece.owned')).map(el => el.getAttribute('data-piece'));
-  const shareUrl = `https://www.farid.world/share.html?pieces=${owned.join(',')}`;
-  const customMessage = `Collector ${name} holds ${userOwnedPiecesCount}/12 pieces on FARID Canvas. Check my collection:`;
-
-  if (navigator.share) {
-    navigator.share({ title: 'FARID Canvas', text: customMessage, url: shareUrl }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${customMessage} ${shareUrl}`);
-    alert('Link copied to clipboard!');
-  }
-}
-
-function updateTimer() {
-  const now = new Date(), end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59), diff = end - now;
-  if (diff <= 0) return;
-  document.getElementById('days').innerText = String(Math.floor(diff / 86400000)).padStart(2, '0');
-  document.getElementById('hours').innerText = String(Math.floor((diff / 3600000) % 24)).padStart(2, '0');
-  document.getElementById('minutes').innerText = String(Math.floor((diff / 60000) % 60)).padStart(2, '0');
-  document.getElementById('seconds').innerText = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
-}
-
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; cleanUrlDomain(); }
-
-setInterval(updateTimer, 1000);
 updateTimer();
+setInterval(updateTimer, 1000);
+
+document.addEventListener('DOMContentLoaded', () => { document.addEventListener('contextmenu', e => e.preventDefault()); document.addEventListener('keydown', e => { if (e.ctrlKey && (e.key === 's' || e.key === 'u')) e.preventDefault(); }); document.querySelectorAll('img, .artwork-piece').forEach(el => { ['contextmenu', 'dragstart'].forEach(ev => el.addEventListener(ev, e => e.preventDefault())); }); });
+window.onclick = function(e){ if(e.target.classList.contains('modal-overlay')) e.target.style.display = 'none'; if(e.target.classList.contains('reveal-overlay')){ e.target.classList.remove('active'); setTimeout(() => { e.target.style.display = 'none'; }, 400); } };
 </script>
 </body>
 </html>
